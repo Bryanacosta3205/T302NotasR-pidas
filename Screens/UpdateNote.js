@@ -8,6 +8,7 @@ import ColorPicker from '../Components/ColorPicker';
 const db = SQLite.openDatabase({name: 'mydata'});
 
 const UpdateNote = ({route, navigation}) => {
+  const host = 'http://192.168.0.18:3000'
   const {id, title, body,color} = route.params;
   
   const [colorF, setColor] = useState(null);
@@ -18,20 +19,36 @@ const UpdateNote = ({route, navigation}) => {
 
   const onSubmit = () => {
     if (titleF || bodyF || colorF) {
-      db.transaction(tx => {
-        tx.executeSql(
-          'UPDATE note SET title = ?, body = ?, color = ? WHERE id = ?',
-          [titleF ?? title, bodyF ?? body, colorF??color , id],
-          (tx, result) => {
-            if (result.rowsAffected.length === 0) {
-              console.log('No se actualizaron los datos. Intente de nuevo')
-              return;
-            }
-            navigation.goBack();
-          },
-          error => console.log(error),
-        );
-      });
+      // db.transaction(tx => {
+      //   tx.executeSql(
+      //     'UPDATE note SET title = ?, body = ?, color = ? WHERE id = ?',
+      //     [titleF ?? title, bodyF ?? body, colorF??color , id],
+      //     (tx, result) => {
+      //       if (result.rowsAffected.length === 0) {
+      //         console.log('No se actualizaron los datos. Intente de nuevo')
+      //         return;
+      //       }
+      //       navigation.goBack();
+      //     },
+      //     error => console.log(error),
+      //   );
+      // });
+
+      fetch(`${host}/updateNote/${id}`,{
+        method:'PUT',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({title:titleF??title, body:bodyF??body, color:colorF??color})
+      })
+      .then(resp => resp.json())
+      .then(data=>{
+        console.log(data)
+        navigation.goBack()
+      })
+      .catch(err=>console.log(err))
+
     }
     Keyboard.dismiss();
   };
@@ -46,20 +63,33 @@ const UpdateNote = ({route, navigation}) => {
       {
         text:'Eliminar',
         onPress:()=>{
-          db.transaction(tx => {
-            tx.executeSql(
-              'DELETE FROM note WHERE id = ?',
-              [id],
-              (tx, result) => {
-                if (result.rowsAffected.length === 0) {
-                  console.log('No se actualizaron los datos. Intente de nuevo')
-                  return;
-                }
-                navigation.goBack();
-              },
-              error => console.log(error),
-            );
-          });
+          // db.transaction(tx => {
+          //   tx.executeSql(
+          //     'DELETE FROM note WHERE id = ?',
+          //     [id],
+          //     (tx, result) => {
+          //       if (result.rowsAffected.length === 0) {
+          //         console.log('No se actualizaron los datos. Intente de nuevo')
+          //         return;
+          //       }
+          //       navigation.goBack();
+          //     },
+          //     error => console.log(error),
+          //   );
+          // });
+          fetch(`${host}/deleteNote/${id}`,{
+            method:'DELETE',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+          })
+          .then(resp => resp.json())
+          .then(data=>{
+            console.log(data)
+            navigation.goBack()
+          })
+          .catch(err=>console.log(err))
         }
       }
     ])
@@ -75,7 +105,7 @@ const UpdateNote = ({route, navigation}) => {
       <TextInput
         style={{...styles.textArea,backgroundColor:colorF??color}}
         multiline={true}
-        placeholderTextColor="#b3b5ba"
+        placeholderTextColor="#757575"
         onChangeText={value => onChange(value, 'bodyF')}
         value={bodyF ?? body}
       />

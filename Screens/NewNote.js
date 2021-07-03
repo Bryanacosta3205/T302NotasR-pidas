@@ -8,7 +8,7 @@ import {colors} from '../helpers/colors'
 const db = SQLite.openDatabase({name: 'mydata'});
 
 const NewNote = ({navigation}) => {
-  
+  const host = 'http://192.168.0.18:3000'
   const [color, setColor] = useState('#FFFFFF');
   
   const {title, body, onChange} = useForm({
@@ -18,18 +18,33 @@ const NewNote = ({navigation}) => {
 
   const onSubmit = () => {
     if (title && body) {
-      db.transaction(function (t) {
-        t.executeSql(
-          'INSERT INTO note (id, title, body,color) VALUES (null,?,?,?)',
-          [title, body,color],
-          function (tx, res) {
+      // db.transaction(function (t) {
+      //   t.executeSql(
+      //     'INSERT INTO note (id, title, body,color) VALUES (null,?,?,?)',
+      //     [title, body,color],
+      //     function (tx, res) {
             
-            console.log('Nota guardada satisfactoriamente');
-            navigation.goBack();
-          },
-          error => console.log({error}),
-        );
-      });
+      //       console.log('Nota guardada satisfactoriamente');
+      //       navigation.goBack();
+      //     },
+      //     error => console.log({error}),
+      //   );
+      // });
+
+      fetch(`${host}/newNote`,{
+        method:'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({title, body, color})
+      })
+      .then(resp => {
+        navigation.goBack();
+      })
+      .catch(err=>console.log(err))
+
+
     }
     Keyboard.dismiss();
   };
@@ -39,6 +54,7 @@ const NewNote = ({navigation}) => {
       <TextInput
         style={styles.title}
         placeholder="Título de la nota"
+        placeholderTextColor='#757575'
         onChangeText={value => onChange(value, 'title')}
         value={title}
       />
@@ -46,7 +62,7 @@ const NewNote = ({navigation}) => {
         style={{...styles.textArea,backgroundColor:color}}
         multiline={true}
         placeholder="What needs to be done?"
-        placeholderTextColor="#b3b5ba"
+        placeholderTextColor="#757575"
         onChangeText={value => onChange(value, 'body')}
         value={body}
       />
